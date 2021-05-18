@@ -2,11 +2,8 @@ package live.thought.ratiocinate;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.List;
 import java.util.Properties;
 import java.util.Random;
 
@@ -40,6 +37,7 @@ public class Ratiocinate
   private static final String              USER_PROPERTY         = "user";
   private static final String              PASS_PROPERTY         = "password";
   private static final String              ACCOUNT_PROPERTY      = "account";
+  private static final String              INTR_PROPERTY         = "interval";
   private static final String              HELP_OPTION           = "help";
   private static final String              CONFIG_OPTION         = "config";
 
@@ -66,7 +64,7 @@ public class Ratiocinate
         "Configuration file to load options from.  Command line options override config file.");
   }
 
-  public Scatterbrain(Properties props)
+  public Ratiocinate(Properties props)
   {
     String host = props.getProperty(HOST_PROPERTY, DEFAULT_HOST);
     int    port = Integer.parseInt(props.getProperty(PORT_PROPERTY, DEFAULT_PORT));
