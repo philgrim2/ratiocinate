@@ -6,7 +6,7 @@
 	<artifactId>ratiocinate</artifactId>
 	<version>0.1-SNAPSHOT</version>
 	<name>Ratiocinate</name>
-  <name>Utility to arrange THT into discrete wallets.</name>
+        <description>Utility to arrange THT into discrete wallets.</description>
 	<dependencies>
 		<dependency>
 			<groupId>org.fusesource.jansi</groupId>
