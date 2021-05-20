@@ -1,4 +1,4 @@
-package live.thought.ratiocinate;
+package live.thought.rationalize;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,7 +24,7 @@ public class Config
   private static final String              DEFAULT_PORT       = "11617";
   private static final String              DEFAULT_USER       = "user";
   private static final String              DEFAULT_PASS       = "password";
-  private static final String              DEFAULT_PROPERTIES = "ratiocinate.properties";
+  private static final String              DEFAULT_PROPERTIES = "rationalize.properties";
   private static final String              DEFAULT_INTERVAL   = Integer.toString(120);   // 2 minutes
 
   private static final String              HOST_PROPERTY      = "host";
@@ -229,7 +229,7 @@ public class Config
   public static void usage()
   {
     HelpFormatter formatter = new HelpFormatter();
-    formatter.printHelp("Ratiocinate", options);
+    formatter.printHelp("Rationalize", options);
   }
 
   static class FundingLine

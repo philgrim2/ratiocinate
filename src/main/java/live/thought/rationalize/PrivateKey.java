@@ -1,4 +1,4 @@
-package live.thought.ratiocinate;
+package live.thought.rationalize;
 
 import java.security.SecureRandom;
 import org.bitcoinj.core.Sha256Hash;

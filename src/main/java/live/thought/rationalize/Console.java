@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
-package live.thought.ratiocinate;
+package live.thought.rationalize;
 
 import org.fusesource.jansi.AnsiConsole;
 

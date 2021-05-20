@@ -1,4 +1,4 @@
-package live.thought.ratiocinate;
+package live.thought.rationalize;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,7 +16,7 @@ import org.apache.commons.cli.ParseException;
 
 import live.thought.thought4j.ThoughtRPCClient;
 
-public class Ratiocinate
+public class Rationalize
 {
   /** RELEASE VERSION */
   public static final String VERSION = "v0.1";
@@ -28,7 +28,7 @@ public class Ratiocinate
 
   private Config             config;
 
-  public Ratiocinate(Config config)
+  public Rationalize(Config config)
   {
     this.config = config;
     
@@ -60,7 +60,7 @@ public class Ratiocinate
   public static void main(String[] args)
   {
     Config config = new Config(args);
-    Ratiocinate app = new Ratiocinate(config);
+    Rationalize app = new Rationalize(config);
     app.run();
     Console.end();
 
