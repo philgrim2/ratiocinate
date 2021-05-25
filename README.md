@@ -1,2 +1,2 @@
-# ratiocinate
+# rationalize
 Utility for organizing Thought coin into discrete accounts.
