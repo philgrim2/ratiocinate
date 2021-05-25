@@ -158,6 +158,8 @@ public class Rationalize
             {
               Console.output("Error sending chunk.");
               e.printStackTrace();
+              moreElectricity = false;
+              break;
             }
           }
           if (sent > 0)
