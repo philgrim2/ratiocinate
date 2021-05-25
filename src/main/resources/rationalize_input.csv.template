@@ -1,0 +1,14 @@
+#
+# This sample shows how Rationalize input files should be arranged.
+# The first column is a floating point number indicating how much coin to transfer 
+# The second column shows how many new accounts to create that will receive that amount of coin
+#
+# For example, this file will result in the creation of n accounts.  Five accounts will contain
+# one million coin each, 8 accounts will contain 500,000 coins each, and so on.
+#
+1000000, 5
+500000, 8
+250000, 4
+100000, 10
+50000, 5
+25000, 16

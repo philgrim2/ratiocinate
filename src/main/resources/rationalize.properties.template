@@ -1,0 +1,8 @@
+host=localhost
+port=11617
+user=jqpublic
+password=password
+prefix=Test01
+account=Transfer
+accountFile=rationalize_input.csv
+output=rationalize_output.csv
