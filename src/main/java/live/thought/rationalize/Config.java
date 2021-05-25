@@ -2,8 +2,6 @@ package live.thought.rationalize;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.cli.CommandLine;
@@ -16,51 +14,55 @@ import org.apache.commons.cli.ParseException;
 public class Config
 {
   /** Options for the command line parser. */
-  protected static final Options           options            = new Options();
+  protected static final Options           options             = new Options();
   /** The Commons CLI command line parser. */
-  protected static final CommandLineParser gnuParser          = new GnuParser();
+  protected static final CommandLineParser gnuParser           = new GnuParser();
   /** Default values for connection. */
-  private static final String              DEFAULT_HOST       = "localhost";
-  private static final String              DEFAULT_PORT       = "11617";
-  private static final String              DEFAULT_USER       = "user";
-  private static final String              DEFAULT_PASS       = "password";
-  private static final String              DEFAULT_PROPERTIES = "rationalize.properties";
-  private static final String              DEFAULT_INTERVAL   = Integer.toString(120);   // 2 minutes
+  private static final String              DEFAULT_HOST        = "localhost";
+  private static final String              DEFAULT_PORT        = "11617";
+  private static final String              DEFAULT_USER        = "user";
+  private static final String              DEFAULT_PASS        = "password";
+  private static final String              DEFAULT_PREFIX      = "Rationalize";
+  private static final String              DEFAULT_INPUT_FILE  = "rationalize_input.csv";
+  private static final String              DEFAULT_OUTPUT_FILE = "rationalize_results.csv";
 
-  private static final String              HOST_PROPERTY      = "host";
-  private static final String              PORT_PROPERTY      = "port";
-  private static final String              USER_PROPERTY      = "user";
-  private static final String              PASS_PROPERTY      = "password";
-  private static final String              ACCOUNT_PROPERTY   = "account";
-  private static final String              INTR_PROPERTY      = "interval";
-  private static final String              HELP_OPTION        = "help";
-  private static final String              CONFIG_OPTION      = "config";
+  private static final String              HOST_PROPERTY       = "host";
+  private static final String              PORT_PROPERTY       = "port";
+  private static final String              USER_PROPERTY       = "user";
+  private static final String              PASS_PROPERTY       = "password";
+  private static final String              PREFIX_PROPERTY     = "prefix";
+  private static final String              ACCOUNT_PROPERTY    = "account";
+  private static final String              HELP_OPTION         = "help";
+  private static final String              CONFIG_OPTION       = "config";
+  private static final String              ACCOUNT_FILE_OPTION = "accountFile";
+  private static final String              OUTPUT_FILE_OPTION  = "output";
 
   /** Set up command line options. */
   static
   {
-    options.addOption("h", HOST_PROPERTY, true, "Thought RPC server host (default: localhost)");
-    options.addOption("P", PORT_PROPERTY, true, "Thought RPC server port (default: 10617)");
+    options.addOption("H", HOST_PROPERTY, true, "Thought RPC server host (default: localhost)");
+    options.addOption("P", PORT_PROPERTY, true, "Thought RPC server port (default: 11617)");
     options.addOption("u", USER_PROPERTY, true, "Thought server RPC user");
     options.addOption("p", PASS_PROPERTY, true, "Thought server RPC password");
-    options.addOption("a", ACCOUNT_PROPERTY, true, "Thought wallet account name to obtain stake from");
-    options.addOption("i", INTR_PROPERTY, true, "Interval in seconds between rounds (default: 2 minutes)");
-    options.addOption("H", HELP_OPTION, true, "Displays usage information");
-    options.addOption("f", CONFIG_OPTION, true,
-        "Configuration file to load options from.  Command line options override config file.");
+    options.addOption("P", PREFIX_PROPERTY, true, "Prefix for created account names. (default: Rationalize)");
+    options.addOption("a", ACCOUNT_PROPERTY, true, "Thought wallet account name to obtain funds from");
+    options.addOption("A", ACCOUNT_FILE_OPTION, true, "File containing funding lines (default: rationalize_input.csv");
+    options.addOption("o", OUTPUT_FILE_OPTION, true, "File to write account keys to (default: rationalize_results.csv");
+    options.addOption("h", HELP_OPTION, true, "Displays usage information");
+    options.addOption("f", CONFIG_OPTION, true, "Configuration file to load options from.  Command line options override config file.");
   }
 
-  protected String            host;
-  protected int               port;
-  protected String            user;
-  protected String            password;
+  protected String host;
+  protected int    port;
+  protected String user;
+  protected String password;
 
-  protected String            sourceAddress;
-  protected double            sourceFundAmount;
-  protected String            lowFundingPolicy;
-  protected int               interval;
-
-  protected List<FundingLine> fundingLines = new ArrayList<FundingLine>();
+  protected String prefix;
+  protected String sourceAccount;
+  protected String accountFileName;
+  protected String outputFileName;
+  
+  protected boolean testnet = false;
 
   public Config(String[] args)
   {
@@ -112,17 +114,32 @@ public class Config
       {
         props.setProperty(ACCOUNT_PROPERTY, commandLine.getOptionValue(ACCOUNT_PROPERTY));
       }
-
-      if (commandLine.hasOption(INTR_PROPERTY))
+      if (commandLine.hasOption(ACCOUNT_FILE_OPTION))
       {
-        props.setProperty(INTR_PROPERTY, commandLine.getOptionValue(INTR_PROPERTY));
+        props.setProperty(ACCOUNT_FILE_OPTION, commandLine.getOptionValue(ACCOUNT_FILE_OPTION));
       }
-
+      if (commandLine.hasOption(OUTPUT_FILE_OPTION))
+      {
+        props.setProperty(OUTPUT_FILE_OPTION, commandLine.getOptionValue(OUTPUT_FILE_OPTION));
+      }
+      if (commandLine.hasOption(PREFIX_PROPERTY))
+      {
+        props.setProperty(PREFIX_PROPERTY, commandLine.getOptionValue(PREFIX_PROPERTY));
+      }
+      
       host = props.getProperty(HOST_PROPERTY, DEFAULT_HOST);
       port = Integer.parseInt(props.getProperty(PORT_PROPERTY, DEFAULT_PORT));
       user = props.getProperty(USER_PROPERTY, DEFAULT_USER);
       password = props.getProperty(PASS_PROPERTY, DEFAULT_PASS);
-      interval = Integer.parseInt(props.getProperty(INTR_PROPERTY, DEFAULT_INTERVAL));
+      sourceAccount = props.getProperty(ACCOUNT_PROPERTY, "");
+      accountFileName = props.getProperty(ACCOUNT_FILE_OPTION, DEFAULT_INPUT_FILE);
+      outputFileName = props.getProperty(OUTPUT_FILE_OPTION, DEFAULT_OUTPUT_FILE);
+      prefix = props.getProperty(PREFIX_PROPERTY, DEFAULT_PREFIX);
+      
+      if (props.getProperty(PORT_PROPERTY, DEFAULT_PORT).startsWith("11"))
+      {
+        testnet = true;
+      }
     }
     catch (ParseException pe)
     {
@@ -136,34 +153,14 @@ public class Config
     }
   }
 
-  public String getSourceAddress()
+  public String getSourceAccount()
   {
-    return sourceAddress;
+    return sourceAccount;
   }
 
-  public void setSourceAddress(String sourceAddress)
+  public void setSourceAccount(String sourceAccount)
   {
-    this.sourceAddress = sourceAddress;
-  }
-
-  public double getSourceFundAmount()
-  {
-    return sourceFundAmount;
-  }
-
-  public void setSourceFundAmount(double sourceFundAmount)
-  {
-    this.sourceFundAmount = sourceFundAmount;
-  }
-
-  public String getLowFundingPolicy()
-  {
-    return lowFundingPolicy;
-  }
-
-  public void setLowFundingPolicy(String lowFundingPolicy)
-  {
-    this.lowFundingPolicy = lowFundingPolicy;
+    this.sourceAccount = sourceAccount;
   }
 
   public String getHost()
@@ -205,56 +202,45 @@ public class Config
   {
     this.password = password;
   }
-
-  public int getInterval()
+    
+  public String getAccountFileName()
   {
-    return interval;
+    return accountFileName;
   }
 
-  public void setInterval(int interval)
+  public void setAccountFileName(String accountFileName)
   {
-    this.interval = interval;
+    this.accountFileName = accountFileName;
   }
 
-  public List<FundingLine> getFundingLines()
+  public String getOutputFileName()
   {
-    return fundingLines;
+    return outputFileName;
   }
 
-  public void setFundingLines(List<FundingLine> fundingLines)
+  public void setOutputFileName(String outputFileName)
   {
-    this.fundingLines = fundingLines;
+    this.outputFileName = outputFileName;
+  }
+  
+  public boolean isTestnet()
+  {
+    return testnet;
+  }
+
+  public String getPrefix()
+  {
+    return prefix;
+  }
+
+  public void setPrefix(String prefix)
+  {
+    this.prefix = prefix;
   }
 
   public static void usage()
   {
     HelpFormatter formatter = new HelpFormatter();
     formatter.printHelp("Rationalize", options);
-  }
-
-  static class FundingLine
-  {
-    protected double amount;
-    protected int    accounts;
-
-    public double getAmount()
-    {
-      return amount;
-    }
-
-    public void setAmount(double amount)
-    {
-      this.amount = amount;
-    }
-
-    public int getAccounts()
-    {
-      return accounts;
-    }
-
-    public void setAccounts(int accounts)
-    {
-      this.accounts = accounts;
-    }
   }
 }
