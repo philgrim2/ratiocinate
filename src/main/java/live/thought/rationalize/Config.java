@@ -42,6 +42,7 @@ public class Config
   private static final String              OUTPUT_FILE_PROPERTY      = "output";
   private static final String              HELP_OPTION               = "help";
   private static final String              CONFIG_OPTION             = "config";
+  private static final String              DEBUG_OPTION              = "debug";
 
   /** Set up command line options. */
   static
@@ -62,6 +63,8 @@ public class Config
     options.addOption("h", HELP_OPTION, true, "Displays usage information");
     options.addOption("f", CONFIG_OPTION, true,
         "Configuration file to load options from.  Command line options override config file.");
+    options.addOption("d", DEBUG_OPTION, true,
+        "Enable debug output.  Command-line only.");
   }
 
   protected String   host;
@@ -91,6 +94,10 @@ public class Config
       {
         usage();
         System.exit(0);
+      }
+      if (commandLine.hasOption(DEBUG_OPTION))
+      {
+        Console.setLevel(1);
       }
       // Check for a config file specified on the command line
       if (commandLine.hasOption(CONFIG_OPTION))
