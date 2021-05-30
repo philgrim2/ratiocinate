@@ -55,15 +55,15 @@ public class Config
     options.addOption("a", ADDRESS_PROPERTY, true,
         "One or more (comma-separated) Thought addresses to obtain funds from (required)");
     options.addOption("F", FUNDING_FILE_PROPERTY, true,
-        "File containing funding lines (default: rationalize_input.csv");
+        "File containing funding lines (default: rationalize_input.csv)");
     options.addOption("s", FUNDING_STRATEGY_PROPERTY, true,
         "Strategy for selecting funding inputs (oldest or newest) (default: oldest");
     options.addOption("o", OUTPUT_FILE_PROPERTY, true,
-        "File to write account keys to (default: rationalize_results.csv");
-    options.addOption("h", HELP_OPTION, true, "Displays usage information");
+        "File to write account keys to (default: rationalize_results.csv)");
+    options.addOption("h", HELP_OPTION, false, "Displays usage information");
     options.addOption("f", CONFIG_OPTION, true,
         "Configuration file to load options from.  Command line options override config file.");
-    options.addOption("d", DEBUG_OPTION, true,
+    options.addOption("d", DEBUG_OPTION, false,
         "Enable debug output.  Command-line only.");
   }
 
