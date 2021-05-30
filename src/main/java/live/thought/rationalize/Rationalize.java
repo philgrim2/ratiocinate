@@ -25,7 +25,7 @@ public class Rationalize
   /** RELEASE VERSION */
   public static final String  VERSION         = "v0.1";
   public static final int     CHUNK_SIZE      = 10000;
-  public static final int     CONF_CHUNK_SIZE = 2000;
+  public static final int     CONF_CHUNK_SIZE = 5000;
 
   /** Connection for Thought daemon */
   private ThoughtRPCClient    client;
@@ -62,6 +62,7 @@ public class Rationalize
     PrintWriter       pw              = null;
     List<FundingLine> fundingLines    = null;
     String[]          sourceAddresses = config.getSourceAddresses();
+    double            totalNeeded     = 0.0;
 
     if (inputFile.canRead())
     {
@@ -132,16 +133,8 @@ public class Rationalize
 
     if (moreElectricity)
     {
-      double totalCached = 0.0;
-      double totalNeeded = total + (actionList.size() * 0.01); // Fudge for transaction fees
-      if (config.getFundingStrategy().equals(Config.NEWEST_FIRST))
-      {
-        totalCached = getUnspentNewestFirst(totalNeeded, sourceAddresses); 
-      }
-      else
-      {
-        totalCached = getUnspentOldestFirst(totalNeeded, sourceAddresses);
-      }
+      totalNeeded = total + (actionList.size() * 0.01); // Fudge for transaction fees
+      double totalCached = fillUnspentCache(totalNeeded, sourceAddresses);
       if (null == unspentCache || unspentCache.isEmpty() || totalCached < totalNeeded)
       {
         Console.output("Unable to retrieve sufficient unspent inputs.");
@@ -212,8 +205,10 @@ public class Rationalize
           for (FundingAction act : searchResults)
           {
             pw.append(act.toString());
+            pw.flush();
             Console.output("Sent " + Double.toString(act.getAmount()) + " to account " + act.getName() + "("
                 + act.getPublicKey() + ")");
+            totalNeeded -= act.getAmount();
           }
           actionList.removeAll(searchResults);
           if (actionList.isEmpty())
@@ -244,11 +239,30 @@ public class Rationalize
         for (int j = 0; j < chunks; j++)
         {
           double chunk = remaining < CHUNK_SIZE ? remaining : CHUNK_SIZE;
+          if (chunk == 0.0) break;
           try
           {
-            sendChunk(act.getPublicKey(), act.getAmount());
+            double actual = sendChunk(act.getPublicKey(), chunk);
+            while (actual == 0)
+            {
+              // We ran out of unspent.
+              Console.output("Refilling unspent cache.");
+              double totalCached = fillUnspentCache(totalNeeded, sourceAddresses);
+              if (totalCached < totalNeeded)
+              {
+                Console.output("@|red Unspent cache prematurely depleted.  Check output file for successful sends. |@");
+                moreElectricity = false;
+                break;
+              }
+              else
+              {
+                //Try again.
+                actual = sendChunk(act.getPublicKey(), chunk);
+              }
+            }
             remaining = remaining - chunk;
             sent += chunk;
+            totalNeeded -= chunk;
             Thread.sleep(200); // Don't send too fast - give the daemon a break in between.
           }
           catch (InterruptedException i)
@@ -257,8 +271,8 @@ public class Rationalize
           }
           catch (ThoughtRPCException e)
           {
-            Console.output("@|red Error sending chunk. |@");
             e.printStackTrace();
+            Console.output("@|red Error sending chunk. Check output file for successful sends. |@");         
             moreElectricity = false;
             break;
           }
@@ -266,7 +280,9 @@ public class Rationalize
         if (sent > 0)
         {
           // Write to the output file.
+          if (sent != act.getAmount()) act.setAmount(sent);
           pw.append(act.toString());
+          pw.flush();
           Console.output(
               "Sent " + Double.toString(sent) + " to account " + act.getName() + "(" + act.getPublicKey() + ")");
         }
@@ -313,6 +329,20 @@ public class Rationalize
     return lines;
   }
 
+  private double fillUnspentCache(double balanceNeeded, String[] addresses)
+  {
+    double totalCached = 0.0;
+    if (config.getFundingStrategy().equals(Config.NEWEST_FIRST))
+    {
+      totalCached = getUnspentNewestFirst(balanceNeeded, addresses); 
+    }
+    else
+    {
+      totalCached = getUnspentOldestFirst(balanceNeeded, addresses);
+    }
+    return totalCached;
+  }
+  
   private double getUnspentOldestFirst(double balanceNeeded, String[] addresses)
   {
     Console.output("Fetching unspent inputs oldest first.");
@@ -414,6 +444,7 @@ public class Rationalize
     if (inputBalance < amount)
     {
       Console.output("Not enough unspent left in cache.");
+      actual = 0.0;
     }
     else
     {
@@ -424,7 +455,7 @@ public class Rationalize
       Console.debug("Creating raw transaction.", 1);
       String transactionHex = client.createRawTransaction(inputs, outputs);
 
-      actual = send(transactionHex);
+      actual += send(transactionHex);
 
       unspentCache.removeAll(spentCache);
     }
@@ -450,7 +481,7 @@ public class Rationalize
     Console.debug("Creating raw transaction.", 1);
     String transactionHex = client.createRawTransaction(inputs, outputs);
 
-    actual = send(transactionHex);
+    actual += send(transactionHex);
 
     unspentCache.remove(large);
 
@@ -459,14 +490,14 @@ public class Rationalize
 
   private double send(String rawTransaction)
   {
-    double actual = 0.0;
+    double fee = 0.0;
     Console.debug("Funding raw transaction.", 1);
 
     FundRawTransactionOptions opts = new FundRawTransactionOptions();
     opts.setChangeAddress(config.getSourceAddresses()[0]);
 
     FundedRawTransaction funded = client.fundRawTransaction(rawTransaction, opts);
-    actual += funded.fee();
+    fee += funded.fee();
 
     Console.debug("Signing raw transaction.", 1);
     String signedHex = client.signRawTransaction(funded.hex());
@@ -476,7 +507,7 @@ public class Rationalize
 
     Console.debug("Sent transaction " + txid, 1);
 
-    return actual;
+    return fee;
   }
 
   private Unspent biggestUnspent()

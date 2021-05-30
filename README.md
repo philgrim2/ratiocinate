@@ -1,6 +1,8 @@
 # Rationalize
 ### Coin management utility for organizing Thought coin into discrete accounts. ###  
 The rationalize utility takes as input a source address or addresses from which inputs are withdrawn, and a list of amounts to output.  The program creates new labeled key pairs in the wallet, and transfers the specified amount of THT to those addresses.  Configuration options allow the user to specify whether to use newer or older inputs first.  The program will attempt to satisfy each of the funding actions specified from the largest unspent inputs first, then by consolidating smaller inputs.  A comma-separated values (CSV) file is provided listing the labeled key pairs and amounts disbursed. See the Running section below for instructions and configuration options.  
+
+Rationalize will make a best effort to fund each requested account, however, factors such as highly-variable input sizes, number and size of requested accounts, and handling change could result in some funding lines not being satisfied. In these cases, the output will contain all of the successfully funded accounts.
   
 Note:  The new private/public key pairs created in this process are not derived from the wallet's HD key.  After using this utility, make sure to create new backups of the wallet file.  
 
