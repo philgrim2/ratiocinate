@@ -53,7 +53,9 @@ public class Rationalize
 
   public void run()
   {
-    Console.output("Beginning Rationalization.");
+    Console.output(String.format("@|bg_blue,fg_white rationalize %s: A coin management utility for Thought Network.|@", VERSION));
+    long timestamp = System.currentTimeMillis();
+    Console.output(String.format("Beginning Rationalization (timestamp %s).", Long.toString(timestamp)));
     boolean           moreElectricity = true;
     File              inputFile       = new File(config.getFundingFileName());
     File              outputFile      = new File(config.getOutputFileName());
@@ -90,7 +92,7 @@ public class Rationalize
         int numAccounts = line.getAccounts();
         for (int i = 1; i <= numAccounts; i++)
         {
-          String        name = String.format("%s-%d-%d", config.getPrefix(), lineIndex, i);
+          String        name = String.format("%s-%s-%d-%d", config.getPrefix(), Long.toString(timestamp), lineIndex, i);
           FundingAction act  = new FundingAction(name, line.getAmount());
           actionList.add(act);
           total += line.getAmount();

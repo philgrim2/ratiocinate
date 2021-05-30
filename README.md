@@ -73,7 +73,7 @@ output=rationalize_output.csv
 - ***port***:  The RPC port to connect to on the Thought wallet or daemon.  Defaults to 10617 (Thought mainnet).    
 - ***user***:  The RPC user name to connect as.  
 - ***password***:  The password for the given RPC user.  
-- ***prefix***:  The prefix to prepend to created address labels.  Labels will follow the pattern of <prefix>-<funding line>-<account index>.  If you are running rationalize multiple times with different inputs/outputs, change the prefix to avoid label collision in the wallet.  
+- ***prefix***:  The prefix to prepend to created address labels.  Labels will follow the pattern of <prefix>-<timestamp>-<funding line>-<account index>.     
 - ***addresses***:  The source address or addresses (comma-separated) to pull inputs from.  
 - ***fundingStrategy***:  You can choose to have Rationalize select unspent inputs oldest first or newest first.  Default is oldest first.  
 - ***fundingFile***:  The file containing funding lines - an amount of THT followed by the number of addresses to create that will receive that amount.  See below for format.  
@@ -89,18 +89,18 @@ Remember that if command-line options and properties file properties both specif
 ### Input File ###  
 This sample shows how Rationalize input files should be arranged.  The first column is a floating point number indicating how much coin to transfer.  The second column shows how many new accounts to create that will receive that amount of coin.  
   
-For example, this file will result in the creation of 48 accounts.  Five accounts will contain one million coins each, 8 accounts will contain 500,000 coins each, and so on.  Assuming a label prefix of MYACCOUNTS, resulting wallet labels will include MYACCOUNTS-1-1 (first funding line, first account) through MYACCOUNTS-6-16 (sixth funding line, 16th account).  
+For example, this file will result in the creation of 48 accounts.  Five accounts will contain one million coins each, 8 accounts will contain 500,000 coins each, and so on.  Accounts are labeled in the wallet using the timestamp of the run (in Unix time - used to prevent label collision in the wallet), the funding line index, and the index of the account within the funding line. Assuming a label prefix of MYACCOUNTS and a timestamp of 1622407476973, resulting wallet labels will include MYACCOUNTS-1622407476973-1-1 (first funding line, first account) through MYACCOUNTS-1622407476973-6-16 (sixth funding line, 16th account).  
 
 Lines beginning with the octothorpe character will be treated as comments.  
   
 ```
 # This is a comment
-1000000, 5
-500000, 8
-250000, 4
-100000, 10
-50000, 5
-25000, 16
+1000000.0, 5
+500000.0, 8
+250000.0, 4
+100000.0, 10
+50000.0, 5
+25000.0, 16
 ``` 
  
   
